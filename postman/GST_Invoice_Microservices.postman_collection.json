@@ -1,0 +1,313 @@
+{
+  "info": {
+    "name": "GST Invoice Generator - Microservices API Collection",
+    "description": "Comprehensive Postman test collection for the 12 Spring Boot microservices and API Gateway.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080/api"
+    },
+    {
+      "key": "jwtToken",
+      "value": ""
+    },
+    {
+      "key": "businessId",
+      "value": "1"
+    },
+    {
+      "key": "invoiceId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication & RBAC",
+      "item": [
+        {
+          "name": "User Registration",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Pramod Kumar\",\n  \"email\": \"owner@enterprise.com\",\n  \"password\": \"password123\",\n  \"phone\": \"9876543210\",\n  \"role\": \"BUSINESS_OWNER\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/register" }
+          }
+        },
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set('jwtToken', jsonData.data.accessToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"owner@enterprise.com\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/auth/login" }
+          }
+        },
+        {
+          "name": "Get Current User Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/auth/me" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Business Service",
+      "item": [
+        {
+          "name": "Create Business Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"businessName\": \"Gujarat Freight Tools\",\n  \"gstin\": \"24AAACG1234A1Z5\",\n  \"pan\": \"AAACG1234A\",\n  \"state\": \"Gujarat\",\n  \"stateCode\": \"24\",\n  \"addressLine1\": \"Plot 41, GIDC Industrial Estate, Vatva\",\n  \"city\": \"Ahmedabad\",\n  \"pincode\": \"382445\",\n  \"bankName\": \"HDFC Bank Ltd\",\n  \"accountNumber\": \"50200012345678\",\n  \"ifscCode\": \"HDFC0001234\",\n  \"upiId\": \"freighttools@hdfcbank\",\n  \"invoicePrefix\": \"INV-\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/businesses" }
+          }
+        },
+        {
+          "name": "Get Business By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/businesses/1" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Customer Service",
+      "item": [
+        {
+          "name": "Create B2B Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"TechCorp Solutions Pvt Ltd\",\n  \"email\": \"finance@techcorp.in\",\n  \"mobile\": \"9820011223\",\n  \"gstin\": \"27AABCT1234A1Z9\",\n  \"addressLine1\": \"Unit 402, Trade Tower, BKC\",\n  \"city\": \"Mumbai\",\n  \"state\": \"Maharashtra\",\n  \"stateCode\": \"27\",\n  \"pinCode\": \"400051\",\n  \"customerType\": \"B2B\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/customers" }
+          }
+        },
+        {
+          "name": "List All Customers",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/customers" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Product Service",
+      "item": [
+        {
+          "name": "Create Product in Catalog",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productName\": \"Heavy Duty Lathe Chuck 200mm\",\n  \"description\": \"Industrial self-centering 3-jaw chuck\",\n  \"hsnSac\": \"8466\",\n  \"unit\": \"NOS\",\n  \"unitPrice\": 5000.00,\n  \"gstRate\": 18.00,\n  \"category\": \"Goods\",\n  \"stockQuantity\": 50\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/products" }
+          }
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/products" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. GST Calculation Engine",
+      "item": [
+        {
+          "name": "Calculate Tax (Intra-State: 50% CGST + 50% SGST)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerStateCode\": \"24\",\n  \"buyerStateCode\": \"24\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"productName\": \"Industrial Chuck\",\n      \"hsnSac\": \"8466\",\n      \"quantity\": 2,\n      \"unitPrice\": 5000.00,\n      \"discount\": 0,\n      \"gstRate\": 18.00\n    }\n  ],\n  \"overallDiscount\": 0\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/gst/calculate" }
+          }
+        },
+        {
+          "name": "Calculate Tax (Inter-State: 100% IGST)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sellerStateCode\": \"24\",\n  \"buyerStateCode\": \"27\",\n  \"items\": [\n    {\n      \"productId\": 1,\n      \"productName\": \"Industrial Chuck\",\n      \"hsnSac\": \"8466\",\n      \"quantity\": 2,\n      \"unitPrice\": 5000.00,\n      \"discount\": 0,\n      \"gstRate\": 18.00\n    }\n  ],\n  \"overallDiscount\": 0\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/gst/calculate" }
+          }
+        },
+        {
+          "name": "Get GST Slabs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/gst/slabs" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Invoice Processing Service",
+      "item": [
+        {
+          "name": "Create Tax Invoice",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerId\": 1,\n  \"placeOfSupply\": \"Maharashtra\",\n  \"items\": [\n    {\n      \"productName\": \"Heavy Duty Lathe Chuck 200mm\",\n      \"hsnSac\": \"8466\",\n      \"quantity\": 2,\n      \"unit\": \"NOS\",\n      \"unitPrice\": 5000.00,\n      \"discount\": 0,\n      \"gstRate\": 18.00\n    }\n  ],\n  \"notes\": \"Payment due within 30 days.\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/invoices" }
+          }
+        },
+        {
+          "name": "Get Invoices List",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/invoices" }
+          }
+        },
+        {
+          "name": "Get Invoice By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/invoices/1" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Payment Service",
+      "item": [
+        {
+          "name": "Record Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"invoiceId\": 1,\n  \"amount\": 5000.00,\n  \"paymentMethod\": \"UPI\",\n  \"referenceNumber\": \"UPI-99238472\",\n  \"notes\": \"Advance payment received via PhonePe\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/payments" }
+          }
+        },
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/payments" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. PDF Vector Generator",
+      "item": [
+        {
+          "name": "Download Invoice PDF",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/pdf/invoice/1" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Reports & GSTR-1 Service",
+      "item": [
+        {
+          "name": "Dashboard Metrics KPIs",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/reports/dashboard" }
+          }
+        },
+        {
+          "name": "GSTR-1 Statutory Return Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwtToken}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/reports/gstr1" }
+          }
+        }
+      ]
+    }
+  ]
+}
+

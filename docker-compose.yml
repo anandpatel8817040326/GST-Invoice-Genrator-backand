@@ -1,0 +1,291 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # PostgreSQL Dedicated Database Engine
+  # ==========================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: gst-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    networks:
+      - gst-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # Service Discovery Registry (Eureka)
+  # ==========================================
+  eureka-server:
+    build:
+      context: ./eureka-server
+    container_name: gst-eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - gst-network
+
+  # ==========================================
+  # API Gateway
+  # ==========================================
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: gst-api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Auth Service
+  # ==========================================
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: gst-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Business Service
+  # ==========================================
+  business-service:
+    build:
+      context: ./business-service
+    container_name: gst-business-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/business_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Customer Service
+  # ==========================================
+  customer-service:
+    build:
+      context: ./customer-service
+    container_name: gst-customer-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/customer_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Product Service
+  # ==========================================
+  product-service:
+    build:
+      context: ./product-service
+    container_name: gst-product-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/product_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # GST Calculation Engine Service
+  # ==========================================
+  gst-service:
+    build:
+      context: ./gst-service
+    container_name: gst-calculation-service
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/gst_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Invoice Service
+  # ==========================================
+  invoice-service:
+    build:
+      context: ./invoice-service
+    container_name: gst-invoice-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/invoice_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Payment Service
+  # ==========================================
+  payment-service:
+    build:
+      context: ./payment-service
+    container_name: gst-payment-service
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/payment_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # PDF Vector Generation Service
+  # ==========================================
+  pdf-service:
+    build:
+      context: ./pdf-service
+    container_name: gst-pdf-service
+    ports:
+      - "8088:8088"
+    environment:
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      - eureka-server
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Notification Service
+  # ==========================================
+  notification-service:
+    build:
+      context: ./notification-service
+    container_name: gst-notification-service
+    ports:
+      - "8089:8089"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/notification_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Report Service
+  # ==========================================
+  report-service:
+    build:
+      context: ./report-service
+    container_name: gst-report-service
+    ports:
+      - "8090:8090"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/report_db
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      EUREKA_SERVER_URL: http://eureka-server:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka-server:
+        condition: service_started
+    networks:
+      - gst-network
+
+  # ==========================================
+  # Frontend Application (React + TypeScript)
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+    container_name: gst-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_BASE_URL=http://api-gateway:8080/api
+    depends_on:
+      - api-gateway
+    networks:
+      - gst-network
+
+networks:
+  gst-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
+
