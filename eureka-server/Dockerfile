@@ -14,7 +14,7 @@ FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
 
-COPY --from=build /app/eureka-server/target/eureka-server-*.jar app.jar
+COPY --from=build /app/eureka-server/target/*.jar app.jar
 
 EXPOSE 8761
 
